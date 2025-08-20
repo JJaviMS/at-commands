@@ -122,7 +122,7 @@ impl<'a> CommandBuilder<'a, Uninitialized> {
         builder
     }
 }
-impl<'a, ANY> CommandBuilder<'a, ANY> {
+impl<ANY> CommandBuilder<'_, ANY> {
     /// Tries to append data to the buffer.
     ///
     /// If it won't fit, it silently fails and won't copy the data.
@@ -162,7 +162,7 @@ impl<'a, N: Nameable> CommandBuilder<'a, Initialized<N>> {
     }
 }
 
-impl<'a> CommandBuilder<'a, Set> {
+impl CommandBuilder<'_, Set> {
     /// Add an integer parameter.
     pub fn with_int_parameter<INT: Into<i32>>(mut self, value: INT) -> Self {
         let mut formatting_buffer = [0; crate::formatter::MAX_INT_DIGITS];
