@@ -79,6 +79,18 @@ pub fn parse_int(mut buffer: &[u8]) -> Option<i32> {
     }
 }
 
+#[cfg(feature = "hex")]
+const HEX_BYTE_SIZE: usize = 2;
+
+#[cfg(feature = "hex")]
+#[inline]
+pub fn parse_byte_to_hex(byte: u8) -> heapless::String<HEX_BYTE_SIZE> {
+    use heapless::format;
+
+    format!(HEX_BYTE_SIZE;"{:02x}", byte)
+        .expect("This should never fail, we are ensuring a length of 2 for the String and hex values for one byte are always size 2")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -111,5 +123,14 @@ mod tests {
         assert_eq!(parse_int(b"-b"), None);
         assert_eq!(parse_int(b"123456a"), None);
         assert_eq!(parse_int(b"z12354"), None);
+    }
+
+    #[test]
+    #[cfg(feature = "hex")]
+    fn test_parse_hex() {
+        assert_eq!(parse_byte_to_hex(0xFF), "ff");
+        assert_eq!(parse_byte_to_hex(0x1), "01");
+        assert_eq!(parse_byte_to_hex(0x0), "00");
+        assert_eq!(parse_byte_to_hex(0x10), "10");
     }
 }

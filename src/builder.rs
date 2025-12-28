@@ -211,6 +211,19 @@ impl CommandBuilder<'_, Set> {
         self.try_append_data(b",");
         self
     }
+
+    /// Add the given [value] to the array using the hex format for the bytes
+    #[cfg(feature = "hex")]
+    pub fn with_rax_hex_parameter<T: AsRef<[u8]>>(mut self, value: T) -> Self {
+        for byte in value.as_ref().iter() {
+            use crate::formatter::parse_byte_to_hex;
+
+            let hex_value = parse_byte_to_hex(*byte);
+            self.try_append_data(hex_value.as_bytes());
+        }
+        self.try_append_data(b",");
+        self
+    }
 }
 
 impl<'a, F: Finishable> CommandBuilder<'a, F> {
@@ -472,5 +485,18 @@ mod tests {
             .finish_with(b"\r")
             .unwrap();
         assert_eq!(core::str::from_utf8(value).unwrap(), "AT+CPIN=1234,9\r");
+    }
+
+    #[test]
+    #[cfg(feature = "hex")]
+    fn test_hex_parameter() {
+        let mut buffer = [0; 128];
+        let value = CommandBuilder::create_set(&mut buffer, true)
+            .named("+CPIN")
+            .with_rax_hex_parameter(&[0xFF, 0x2F, 0x00])
+            .finish()
+            .unwrap();
+
+        assert_eq!(value, b"AT+CPIN=ff2f00\r\n");
     }
 }
