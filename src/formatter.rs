@@ -8,7 +8,7 @@ pub const MAX_INT_DIGITS: usize = 11;
 /// It can be used as a value or to determine the length of the formatting.
 ///
 /// Panics if the buffer is less than [MAX_INT_DIGITS] long.
-pub fn write_int(buffer: &mut [u8], mut value: i32) -> &mut [u8] {
+pub fn write_int(buffer: &mut [u8], value: i32) -> &mut [u8] {
     // Check in debug mode if the buffer is long enough.
     // We don't do this in release to have less overhead.
     debug_assert!(buffer.len() >= MAX_INT_DIGITS);
@@ -16,36 +16,35 @@ pub fn write_int(buffer: &mut [u8], mut value: i32) -> &mut [u8] {
     let mut buffer_index = 0;
     let is_negative = value.is_negative();
 
-    // We want a negative value because that can hold every absolute value.
-    if !is_negative {
-        value = -value;
-    }
-
-    // Special case for 0
-    if value == 0 {
+    if value == 0{
         buffer[buffer_index] = b'0';
         buffer_index += 1;
-    }
-
-    // Write the smallest digit to the buffer.
-    // This will put it in there in reverse.
-    while value != 0 {
-        // The value is negative, so invert the smallest digit, offset it with the 0 character
-        // and put it in the buffer.
-        buffer[buffer_index] = b'0' + -(value % 10) as u8;
-        buffer_index += 1;
-        // Divide the value to get rid of the smallest digit.
-        value /= 10;
+        return &mut buffer[0..buffer_index];
     }
 
     if is_negative {
-        // Don't forget to put the minus sign there.
         buffer[buffer_index] = b'-';
         buffer_index += 1;
     }
 
-    // We built the buffer in reverse, so now we've got to undo that.
-    buffer[0..buffer_index].reverse();
+    // We already checked for negative, take the absolute value and keep working on it
+    let mut number = value.unsigned_abs();
+    // Calculate the number of digits by using logarithm.
+    let mut n_digits = number.ilog10() as i32;
+
+
+    while n_digits >= 0 {
+        // For each iteration we will take the biggest number of the value and put it into the buffer
+        let div = 10u32.pow(n_digits as u32).max(1);
+        let current_number = number / div;
+        // Make the number the full number so we can adjust the number correctly
+        number -= current_number * div;
+        buffer[buffer_index] = b'0' + current_number as u8;
+        buffer_index += 1;
+        n_digits -= 1;
+    }
+
+    debug_assert!(number == 0, "In this point the number should be 0, which asserts that we wrote it OK");
 
     &mut buffer[0..buffer_index]
 }
