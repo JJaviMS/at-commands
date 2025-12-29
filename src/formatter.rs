@@ -51,32 +51,11 @@ pub fn write_int(buffer: &mut [u8], mut value: i32) -> &mut [u8] {
 }
 
 /// Parses an int
-pub fn parse_int(mut buffer: &[u8]) -> Option<i32> {
+pub fn parse_int(buffer: &[u8]) -> Option<i32> {
     if buffer.is_empty() || buffer.len() > MAX_INT_DIGITS {
         return None;
     }
-
-    let is_negative = buffer[0] == b'-';
-
-    if is_negative {
-        buffer = &buffer[1..];
-    }
-
-    let mut value = 0;
-    for char in buffer.iter() {
-        if *char < b'0' || *char > b'9' {
-            return None;
-        } else {
-            value *= 10;
-            value -= (*char - b'0') as i32;
-        }
-    }
-
-    if is_negative {
-        Some(value)
-    } else {
-        Some(-value)
-    }
+    core::str::from_utf8(buffer).ok()?.parse::<i32>().ok()
 }
 
 /// The size that occupies a byte in hex format
