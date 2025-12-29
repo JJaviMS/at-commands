@@ -106,8 +106,6 @@ pub fn parse_byte_to_hex(byte: u8) -> [u8; HEX_BYTE_SIZE] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloc::format;
-    use alloc::vec::Vec;
 
     #[test]
     fn test_write_int() {
