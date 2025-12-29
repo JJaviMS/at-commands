@@ -1,6 +1,6 @@
 [package]
 name = "at-commands"
-version = "0.5.6"
+version = "0.5.7"
 authors = ["Dion Dokter <diondokter@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -11,7 +11,7 @@ readme = "README.md"
 keywords = ["no_std", "AT", "Command", "Builder"]
 
 [dependencies]
-defmt = { version = "0.3", optional = true }
+defmt = { version = "1.0.1", optional = true }
 
 [features]
 defmt = ["dep:defmt"]
