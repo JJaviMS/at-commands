@@ -79,9 +79,35 @@ pub fn parse_int(mut buffer: &[u8]) -> Option<i32> {
     }
 }
 
+/// The size that occupies a byte in hex format
+const HEX_BYTE_SIZE: usize = 2;
+
+/// Helper function that given a byte returns the corresponding ASCII nibble (4 bytes)
+/// for the given [byte].
+/// [byte] must be between 0 and 15 inclusive
+fn get_ascii(byte: u8) -> u8 {
+    // By definition by min is 0
+    debug_assert!(byte <= 15, "The provided byte must be in range [0, 15]");
+    match byte {
+        0..=9 => b'0' + byte,
+        10..=15 => b'a' + byte - 10,
+        _ => unreachable!(),
+    }
+}
+
+/// Given a byte returns a byte slice which contains the ASCII hex representation.
+pub fn parse_byte_to_hex(byte: u8) -> [u8; HEX_BYTE_SIZE] {
+    let top = byte >> 4;
+    let bottom = byte & 0x0f;
+
+    [get_ascii(top), get_ascii(bottom)]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::format;
+    use alloc::vec::Vec;
 
     #[test]
     fn test_write_int() {
@@ -111,5 +137,30 @@ mod tests {
         assert_eq!(parse_int(b"-b"), None);
         assert_eq!(parse_int(b"123456a"), None);
         assert_eq!(parse_int(b"z12354"), None);
+    }
+
+    #[test]
+    fn test_byte_to_hex() {
+        let expecting: Vec<u8> = (b'0'..=b'9').chain(b'a'..=b'f').collect();
+        for i in 0..15 {
+            let ascii_value = get_ascii(i);
+            let expected = expecting[i as usize];
+            assert_eq!(ascii_value, expected)
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_byte_to_hex_invalid() {
+        get_ascii(0x97);
+    }
+
+    #[test]
+    fn test_parse_byte_to_hex() {
+        for i in 0u8..=255u8 {
+            let expecting = format!("{:02x}", i);
+            let got = parse_byte_to_hex(i);
+            assert_eq!(expecting.as_bytes(), got);
+        }
     }
 }
