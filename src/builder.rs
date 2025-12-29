@@ -146,6 +146,20 @@ impl<ANY> CommandBuilder<'_, ANY> {
         // Increment the index
         self.index += data_length;
     }
+
+    fn try_append_int(&mut self, value: i32) {
+        let max_data_length = crate::formatter::MAX_INT_DIGITS;
+        let used_buffer;
+        if let Some(buffer_slice) = self.buffer.get_mut(self.index..(self.index + max_data_length)) {
+            let result_buffer = crate::formatter::write_int(buffer_slice, value);
+            used_buffer = result_buffer.len();
+        } else {
+            used_buffer = 0;
+        }
+
+        // Increment the index
+        self.index += used_buffer;
+    }
 }
 
 impl<'a, N: Nameable> CommandBuilder<'a, Initialized<N>> {
@@ -165,11 +179,7 @@ impl<'a, N: Nameable> CommandBuilder<'a, Initialized<N>> {
 impl CommandBuilder<'_, Set> {
     /// Add an integer parameter.
     pub fn with_int_parameter<INT: Into<i32>>(mut self, value: INT) -> Self {
-        let mut formatting_buffer = [0; crate::formatter::MAX_INT_DIGITS];
-        self.try_append_data(crate::formatter::write_int(
-            &mut formatting_buffer,
-            value.into(),
-        ));
+        self.try_append_int(value.into());
         self.try_append_data(b",");
         self
     }
