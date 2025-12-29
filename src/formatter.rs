@@ -79,21 +79,35 @@ pub fn parse_int(mut buffer: &[u8]) -> Option<i32> {
     }
 }
 
-#[cfg(feature = "hex")]
+/// The size that occupies a byte in hex format
 const HEX_BYTE_SIZE: usize = 2;
 
-#[cfg(feature = "hex")]
-#[inline]
-pub fn parse_byte_to_hex(byte: u8) -> heapless::String<HEX_BYTE_SIZE> {
-    use heapless::format;
+/// Helper function that given a byte returns the corresponding ASCII nibble (4 bytes)
+/// for the given [byte].
+/// [byte] must be between 0 and 15 inclusive
+fn get_ascii(byte: u8) -> u8 {
+    // By definition by min is 0
+    debug_assert!(byte <= 15, "The provided byte must be in range [0, 15]");
+    match byte {
+        0..=9 => b'0' + byte,
+        10..=15 => b'a' + byte - 10,
+        _ => unreachable!(),
+    }
+}
 
-    format!(HEX_BYTE_SIZE;"{:02x}", byte)
-        .expect("This should never fail, we are ensuring a length of 2 for the String and hex values for one byte are always size 2")
+/// Given a byte returns a byte slice which contains the ASCII hex representation.
+pub fn parse_byte_to_hex(byte: u8) -> [u8; HEX_BYTE_SIZE] {
+    let top = byte >> 4;
+    let bottom = byte & 0x0f;
+
+    [get_ascii(top), get_ascii(bottom)]
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::format;
+    use alloc::vec::Vec;
 
     #[test]
     fn test_write_int() {
@@ -126,11 +140,27 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "hex")]
-    fn test_parse_hex() {
-        assert_eq!(parse_byte_to_hex(0xFF), "ff");
-        assert_eq!(parse_byte_to_hex(0x1), "01");
-        assert_eq!(parse_byte_to_hex(0x0), "00");
-        assert_eq!(parse_byte_to_hex(0x10), "10");
+    fn test_byte_to_hex() {
+        let expecting: Vec<u8> = (b'0'..=b'9').chain(b'a'..=b'f').collect();
+        for i in 0..15 {
+            let ascii_value = get_ascii(i);
+            let expected = expecting[i as usize];
+            assert_eq!(ascii_value, expected)
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_byte_to_hex_invalid() {
+        get_ascii(0x97);
+    }
+
+    #[test]
+    fn test_parse_byte_to_hex() {
+        for i in 0u8..=255u8 {
+            let expecting = format!("{:02x}", i);
+            let got = parse_byte_to_hex(i);
+            assert_eq!(expecting.as_bytes(), got);
+        }
     }
 }

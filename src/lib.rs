@@ -2,6 +2,7 @@
 
 #![cfg_attr(not(test), no_std)]
 #![deny(missing_docs)]
+extern crate alloc;
 
 pub mod builder;
 pub(crate) mod formatter;
