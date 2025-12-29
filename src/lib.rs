@@ -2,6 +2,8 @@
 
 #![cfg_attr(not(test), no_std)]
 #![deny(missing_docs)]
+
+#[cfg(test)]
 extern crate alloc;
 
 pub mod builder;
