@@ -102,7 +102,6 @@ impl<'a, D> CommandParser<'a, D> {
             // If we did not find the optional just keep the index
             self
         }
-
     }
 
     /// Moves the internal buffer index over the next bit of space characters, if any
@@ -706,7 +705,7 @@ mod tests {
         const OK_3: &str = "OK\r\n";
         const OK_4: &str = "OK";
 
-        static TEST_CASES: [&str; 4] = [OK_1,OK_2,OK_3,OK_4];
+        static TEST_CASES: [&str; 4] = [OK_1, OK_2, OK_3, OK_4];
 
         for test_case in TEST_CASES {
             let result = CommandParser::parse(test_case.as_bytes())
